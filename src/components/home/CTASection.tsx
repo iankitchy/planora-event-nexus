@@ -16,7 +16,7 @@ const CTASection = () => {
             <Button size="lg" variant="secondary" className="bg-white text-planora-blue hover:bg-white/90" asChild>
               <Link to="/create">Get Started</Link>
             </Button>
-            <Button size="lg" variant="outline" className="text-white border-white hover:bg-white/20" asChild>
+            <Button size="lg" variant="outline" className="text-white border-white hover:bg-white/20 hover:text-white" asChild>
               <Link to="/browse">Browse Events</Link>
             </Button>
           </div>

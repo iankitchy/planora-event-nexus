@@ -34,6 +34,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { eventCategories } from '@/data/mockEvents';
+import MediaUpload from '@/components/events/MediaUpload';
 
 const formSchema = z.object({
   title: z.string().min(5, {
@@ -61,6 +62,8 @@ const formSchema = z.object({
   }).max(2000, {
     message: "Description must not exceed 2000 characters."
   }),
+  images: z.array(z.instanceof(File)).nullable().default(null),
+  videos: z.array(z.instanceof(File)).nullable().default(null),
 });
 
 const CreateEvent = () => {
@@ -74,6 +77,8 @@ const CreateEvent = () => {
       endTime: "12:00",
       description: "",
       location: "",
+      images: null,
+      videos: null,
     },
   });
 
@@ -250,6 +255,54 @@ const CreateEvent = () => {
                       </FormControl>
                       <FormDescription>
                         Provide details about your event to attract attendees.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="images"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Event Images</FormLabel>
+                      <FormControl>
+                        <MediaUpload
+                          type="image"
+                          multiple={true}
+                          value={field.value}
+                          onChange={field.onChange}
+                          maxFiles={5}
+                          maxSize={5}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Upload up to 5 images to showcase your event (5MB max per image).
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="videos"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Event Videos</FormLabel>
+                      <FormControl>
+                        <MediaUpload
+                          type="video"
+                          multiple={true}
+                          value={field.value}
+                          onChange={field.onChange}
+                          maxFiles={2}
+                          maxSize={100}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Upload up to 2 videos to showcase your event (100MB max per video).
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
