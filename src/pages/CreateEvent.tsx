@@ -1,4 +1,3 @@
-
 import React from 'react';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
@@ -10,30 +9,8 @@ import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Calendar } from '@/components/ui/calendar';
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { eventCategories } from '@/data/mockEvents';
+import { useNavigate } from 'react-router-dom';
+import { useEvents } from '@/contexts/EventsContext';
 import MediaUpload from '@/components/events/MediaUpload';
 
 const formSchema = z.object({
@@ -68,6 +45,8 @@ const formSchema = z.object({
 
 const CreateEvent = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { addEvent } = useEvents();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -83,11 +62,26 @@ const CreateEvent = () => {
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
+    const eventData = {
+      title: values.title,
+      date: format(values.date, "MMMM d, yyyy"),
+      time: `${values.startTime} - ${values.endTime}`,
+      location: values.location,
+      category: values.category || "Other",
+      imageUrl: values.images && values.images.length > 0 
+        ? URL.createObjectURL(values.images[0]) 
+        : "/placeholder.svg",
+      organizer: "Current User",
+    };
+
+    addEvent(eventData);
+
     toast({
       title: "Event created!",
       description: "Your event has been created successfully.",
     });
+
+    navigate('/');
   }
 
   return (

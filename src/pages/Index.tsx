@@ -6,13 +6,15 @@ import EventsSection from '@/components/home/EventsSection';
 import FeatureSection from '@/components/home/FeatureSection';
 import TestimonialSection from '@/components/home/TestimonialSection';
 import CTASection from '@/components/home/CTASection';
-import { mockEvents } from '@/data/mockEvents';
+import { useEvents } from '@/contexts/EventsContext';
 
 const Index = () => {
+  const { events } = useEvents();
+
   return (
     <Layout>
       <Hero />
-      <EventsSection events={mockEvents} />
+      <EventsSection events={events} />
       <FeatureSection />
       <TestimonialSection />
       <CTASection />

@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import Layout from '@/components/layout/Layout';
-import { mockEvents, eventCategories } from '@/data/mockEvents';
+import { eventCategories } from '@/data/mockEvents';
 import EventCard from '@/components/events/EventCard';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -15,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useEvents } from '@/contexts/EventsContext';
 
 const Browse = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -22,8 +22,10 @@ const Browse = () => {
   const [sortBy, setSortBy] = useState('date');
   const [showFilters, setShowFilters] = useState(false);
   
+  const { events } = useEvents();
+  
   // Filter events based on search term and category
-  const filteredEvents = mockEvents.filter(event => {
+  const filteredEvents = events.filter(event => {
     const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           event.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           event.organizer.toLowerCase().includes(searchTerm.toLowerCase());
