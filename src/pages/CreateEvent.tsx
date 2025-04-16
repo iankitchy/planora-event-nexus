@@ -12,6 +12,30 @@ import { Calendar } from '@/components/ui/calendar';
 import { useNavigate } from 'react-router-dom';
 import { useEvents } from '@/contexts/EventsContext';
 import MediaUpload from '@/components/events/MediaUpload';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { eventCategories } from '@/data/mockEvents';
 
 const formSchema = z.object({
   title: z.string().min(5, {
