@@ -1,15 +1,31 @@
 
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Menu, Search, User, X } from 'lucide-react';
+import { Menu, Search, User, X, LogOut } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
+import { useAuth } from '@/contexts/AuthContext';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, isAuthenticated, logout } = useAuth();
+  const navigate = useNavigate();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
   };
 
   return (
@@ -40,12 +56,31 @@ const Navbar = () => {
             <Search className="h-5 w-5" />
           </Button>
           <ThemeToggle />
-          <Button variant="ghost" size="icon" className="hidden md:flex">
-            <User className="h-5 w-5" />
-          </Button>
-          <Button variant="default" className="hidden md:block">
-            Sign In
-          </Button>
+          
+          {isAuthenticated ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="hidden md:flex">
+                  <User className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuItem className="text-sm">
+                  Signed in as {user?.name}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Log out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button variant="default" className="hidden md:block" onClick={() => navigate('/login')}>
+              Sign In
+            </Button>
+          )}
 
           {/* Mobile Menu Button */}
           <Button variant="ghost" size="icon" className="md:hidden" onClick={toggleMenu}>
@@ -71,13 +106,31 @@ const Navbar = () => {
               <Search className="h-5 w-5" />
               <span>Search</span>
             </div>
-            <div className="flex items-center space-x-2 px-2 py-1 hover:bg-muted rounded-md">
-              <User className="h-5 w-5" />
-              <span>Profile</span>
-            </div>
-            <Button variant="default" className="w-full">
-              Sign In
-            </Button>
+            
+            {isAuthenticated ? (
+              <>
+                <div className="flex items-center space-x-2 px-2 py-1">
+                  <User className="h-5 w-5" />
+                  <span>{user?.name}</span>
+                </div>
+                <Button variant="default" className="w-full" onClick={handleLogout}>
+                  Log Out
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button 
+                  variant="default" 
+                  className="w-full"
+                  onClick={() => {
+                    navigate('/login');
+                    setIsMenuOpen(false);
+                  }}
+                >
+                  Sign In
+                </Button>
+              </>
+            )}
           </nav>
         </div>
       )}
