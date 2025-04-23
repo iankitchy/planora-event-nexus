@@ -9,12 +9,12 @@ import CTASection from '@/components/home/CTASection';
 import { useEvents } from '@/contexts/EventsContext';
 
 const Index = () => {
-  const { events } = useEvents();
+  const { events, loading, error } = useEvents();
 
   return (
     <Layout>
       <Hero />
-      <EventsSection events={events} />
+      <EventsSection events={events} loading={loading} error={error} />
       <FeatureSection />
       <TestimonialSection />
       <CTASection />

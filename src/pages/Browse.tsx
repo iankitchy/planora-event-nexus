@@ -1,10 +1,11 @@
+
 import React, { useState } from 'react';
 import Layout from '@/components/layout/Layout';
 import { eventCategories } from '@/data/mockEvents';
 import EventCard from '@/components/events/EventCard';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, Filter, X } from 'lucide-react';
+import { Search, Filter, X, Loader2 } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -22,7 +23,7 @@ const Browse = () => {
   const [sortBy, setSortBy] = useState('date');
   const [showFilters, setShowFilters] = useState(false);
   
-  const { events } = useEvents();
+  const { events, loading, error } = useEvents();
   
   // Filter events based on search term and category
   const filteredEvents = events.filter(event => {
@@ -130,7 +131,19 @@ const Browse = () => {
           </TabsList>
         </Tabs>
 
-        {filteredEvents.length > 0 ? (
+        {loading ? (
+          <div className="flex justify-center items-center py-16">
+            <Loader2 className="h-8 w-8 text-primary animate-spin mr-2" />
+            <span>Loading events...</span>
+          </div>
+        ) : error ? (
+          <div className="text-center py-16">
+            <h3 className="font-semibold text-lg mb-2 text-destructive">{error}</h3>
+            <Button onClick={() => window.location.reload()} className="mt-4">
+              Try Again
+            </Button>
+          </div>
+        ) : filteredEvents.length > 0 ? (
           <>
             <div className="text-sm text-muted-foreground mb-6">
               Showing {filteredEvents.length} events

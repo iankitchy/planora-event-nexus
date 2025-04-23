@@ -2,16 +2,18 @@
 import React, { useState } from 'react';
 import EventCard, { EventProps } from '../events/EventCard';
 import { Button } from '@/components/ui/button';
-import { BadgeCheck, CalendarCheck, MapPin, ArrowRight } from 'lucide-react';
+import { BadgeCheck, CalendarCheck, MapPin, ArrowRight, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { eventCategories } from '@/data/mockEvents';
 
 interface EventsSectionProps {
   events: EventProps[];
+  loading?: boolean;
+  error?: string | null;
 }
 
-const EventsSection: React.FC<EventsSectionProps> = ({ events }) => {
+const EventsSection: React.FC<EventsSectionProps> = ({ events, loading = false, error = null }) => {
   const [activeCategory, setActiveCategory] = useState("All");
   
   const filteredEvents = activeCategory === "All" 
@@ -53,9 +55,32 @@ const EventsSection: React.FC<EventsSectionProps> = ({ events }) => {
         </Tabs>
 
         <div className="swiss-grid">
-          {filteredEvents.slice(0, 8).map((event) => (
-            <EventCard key={event.id} {...event} />
-          ))}
+          {loading ? (
+            <div className="col-span-full flex justify-center items-center py-12">
+              <Loader2 className="h-8 w-8 text-primary animate-spin" />
+              <span className="ml-2">Loading events...</span>
+            </div>
+          ) : error ? (
+            <div className="col-span-full text-center py-12">
+              <p className="text-destructive">{error}</p>
+              <Button onClick={() => window.location.reload()} className="mt-4">
+                Try Again
+              </Button>
+            </div>
+          ) : filteredEvents.length > 0 ? (
+            filteredEvents.slice(0, 8).map((event) => (
+              <EventCard key={event.id} {...event} />
+            ))
+          ) : (
+            <div className="col-span-full text-center py-12">
+              <p className="text-lg font-medium">No events found</p>
+              <p className="text-muted-foreground mt-2">
+                {activeCategory === "All" 
+                  ? "There are no upcoming events at the moment." 
+                  : `There are no upcoming events in the ${activeCategory} category.`}
+              </p>
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16">
