@@ -1,38 +1,67 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { EventProps } from '@/components/events/EventCard';
-import { mockEvents } from '@/data/mockEvents';
-import { v4 as uuidv4 } from 'uuid';
+import { supabase } from '@/integrations/supabase/client';
 
 interface EventsContextType {
   events: EventProps[];
-  addEvent: (event: Omit<EventProps, 'id'>) => void;
+  addEvent: (event: Omit<EventProps, 'id'>) => Promise<void>;
+  loading: boolean;
+  error: string | null;
 }
 
 const EventsContext = createContext<EventsContextType | undefined>(undefined);
 
 export const EventsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  // Initialize with events from localStorage if available, otherwise use mock events
-  const [events, setEvents] = useState<EventProps[]>(() => {
-    const storedEvents = localStorage.getItem('events');
-    return storedEvents ? JSON.parse(storedEvents) : mockEvents;
-  });
+  const [events, setEvents] = useState<EventProps[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Update localStorage whenever events change
+  // Fetch events from Supabase on mount
   useEffect(() => {
-    localStorage.setItem('events', JSON.stringify(events));
-  }, [events]);
-
-  const addEvent = (event: Omit<EventProps, 'id'>) => {
-    const newEvent = {
-      ...event,
-      id: uuidv4(), // Generate a unique ID
+    const fetchEvents = async () => {
+      setLoading(true);
+      setError(null);
+      const { data, error } = await supabase
+        .from('events')
+        .select('*')
+        .order('date', { ascending: true });
+      if (error) {
+        setError('Could not load events.');
+        setLoading(false);
+        return;
+      }
+      if (data) {
+        // Ensure correct typing
+        setEvents(data as EventProps[]);
+      }
+      setLoading(false);
     };
-    setEvents((prevEvents) => [newEvent, ...prevEvents]);
+    fetchEvents();
+  }, []);
+
+  // Add a new event to Supabase
+  const addEvent = async (event: Omit<EventProps, 'id'>) => {
+    setLoading(true);
+    setError(null);
+    const { data, error: insertError } = await supabase
+      .from('events')
+      .insert([event])
+      .select('*')
+      .single();
+    if (insertError) {
+      setError('Failed to create event.');
+      setLoading(false);
+      return;
+    }
+    if (data) {
+      setEvents((prevEvents) => [data as EventProps, ...prevEvents]);
+    }
+    setLoading(false);
   };
 
   return (
-    <EventsContext.Provider value={{ events, addEvent }}>
+    <EventsContext.Provider value={{ events, addEvent, loading, error }}>
       {children}
     </EventsContext.Provider>
   );
