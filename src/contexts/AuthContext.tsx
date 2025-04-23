@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 
 type User = {
@@ -22,6 +22,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [user, setUser] = useState<User | null>(null);
   const { toast } = useToast();
 
+  // Check for existing session on mount
+  useEffect(() => {
+    const storedAuth = localStorage.getItem('auth');
+    if (storedAuth) {
+      try {
+        const parsedAuth = JSON.parse(storedAuth);
+        setUser(parsedAuth);
+      } catch (error) {
+        localStorage.removeItem('auth');
+      }
+    }
+  }, []);
+
   // In a real app, these would connect to a backend service
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
@@ -39,18 +52,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
       
       // Mock successful login
-      setUser({
+      const newUser = {
         id: "user-1",
         email: email,
         name: email.split('@')[0],
-      });
+      };
+      
+      // Set the user in state
+      setUser(newUser);
       
       // Save to localStorage for persistence
-      localStorage.setItem('auth', JSON.stringify({
-        id: "user-1",
-        email: email,
-        name: email.split('@')[0],
-      }));
+      localStorage.setItem('auth', JSON.stringify(newUser));
       
       toast({
         title: "Success",
@@ -83,18 +95,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
       
       // Mock successful signup
-      setUser({
+      const newUser = {
         id: "user-1",
         email: email,
         name: name,
-      });
+      };
+      
+      // Set the user in state
+      setUser(newUser);
       
       // Save to localStorage for persistence
-      localStorage.setItem('auth', JSON.stringify({
-        id: "user-1",
-        email: email,
-        name: name,
-      }));
+      localStorage.setItem('auth', JSON.stringify(newUser));
       
       toast({
         title: "Success",
@@ -119,19 +130,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       description: "You have been logged out",
     });
   };
-
-  // Check for existing session on mount
-  React.useEffect(() => {
-    const storedAuth = localStorage.getItem('auth');
-    if (storedAuth) {
-      try {
-        const parsedAuth = JSON.parse(storedAuth);
-        setUser(parsedAuth);
-      } catch (error) {
-        localStorage.removeItem('auth');
-      }
-    }
-  }, []);
 
   return (
     <AuthContext.Provider value={{ user, isAuthenticated: !!user, login, signup, logout }}>

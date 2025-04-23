@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { EventProps } from '@/components/events/EventCard';
 import { mockEvents } from '@/data/mockEvents';
 import { v4 as uuidv4 } from 'uuid';
@@ -12,8 +12,16 @@ interface EventsContextType {
 const EventsContext = createContext<EventsContextType | undefined>(undefined);
 
 export const EventsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  // Initialize with mock events
-  const [events, setEvents] = useState<EventProps[]>(mockEvents);
+  // Initialize with events from localStorage if available, otherwise use mock events
+  const [events, setEvents] = useState<EventProps[]>(() => {
+    const storedEvents = localStorage.getItem('events');
+    return storedEvents ? JSON.parse(storedEvents) : mockEvents;
+  });
+
+  // Update localStorage whenever events change
+  useEffect(() => {
+    localStorage.setItem('events', JSON.stringify(events));
+  }, [events]);
 
   const addEvent = (event: Omit<EventProps, 'id'>) => {
     const newEvent = {
