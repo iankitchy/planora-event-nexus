@@ -32,8 +32,18 @@ export const EventsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         return;
       }
       if (data) {
-        // Ensure correct typing
-        setEvents(data as EventProps[]);
+        // Map Supabase field 'imageurl' to EventProps field 'imageUrl'
+        const mappedEvents = data.map(item => ({
+          id: item.id,
+          title: item.title,
+          date: item.date,
+          time: item.time,
+          location: item.location,
+          category: item.category,
+          imageUrl: item.imageurl, // Map imageurl to imageUrl
+          organizer: item.organizer
+        }));
+        setEvents(mappedEvents);
       }
       setLoading(false);
     };
@@ -44,19 +54,46 @@ export const EventsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const addEvent = async (event: Omit<EventProps, 'id'>) => {
     setLoading(true);
     setError(null);
+    
+    // Create a properly mapped object for Supabase
+    const supabaseEvent = {
+      title: event.title,
+      date: event.date,
+      time: event.time,
+      location: event.location,
+      category: event.category,
+      imageurl: event.imageUrl, // Map imageUrl to imageurl for Supabase
+      organizer: event.organizer
+    };
+    
     const { data, error: insertError } = await supabase
       .from('events')
-      .insert([event])
+      .insert([supabaseEvent])
       .select('*')
       .single();
+      
     if (insertError) {
       setError('Failed to create event.');
       setLoading(false);
       return;
     }
+    
     if (data) {
-      setEvents((prevEvents) => [data as EventProps, ...prevEvents]);
+      // Map back from Supabase format to EventProps format
+      const newEvent: EventProps = {
+        id: data.id,
+        title: data.title,
+        date: data.date,
+        time: data.time,
+        location: data.location,
+        category: data.category,
+        imageUrl: data.imageurl, // Map imageurl back to imageUrl
+        organizer: data.organizer
+      };
+      
+      setEvents((prevEvents) => [newEvent, ...prevEvents]);
     }
+    
     setLoading(false);
   };
 
