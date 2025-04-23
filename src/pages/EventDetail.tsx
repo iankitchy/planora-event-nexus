@@ -7,27 +7,98 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Clock, MapPin, User, Share2, Heart, Calendar as CalendarIcon, Users, Info } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import EventCard from '@/components/events/EventCard';
+import EventCard, { EventProps } from '@/components/events/EventCard';
+import { useEvents } from '@/contexts/EventsContext';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/components/ui/use-toast';
 
 const EventDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const [event, setEvent] = useState(mockEvents[0]);
+  const [event, setEvent] = useState<EventProps | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isFavorited, setIsFavorited] = useState(false);
-  
-  // Find similar events (same category)
-  const similarEvents = mockEvents.filter(e => e.category === event.category && e.id !== event.id).slice(0, 3);
+  const { events } = useEvents(); // Get all events from context
   
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      const foundEvent = mockEvents.find(e => e.id === id);
-      if (foundEvent) {
-        setEvent(foundEvent);
+    const fetchEvent = async () => {
+      setIsLoading(true);
+      
+      if (!id) {
+        toast({
+          title: "Error",
+          description: "Invalid event ID",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
       }
-      setIsLoading(false);
-    }, 500);
-  }, [id]);
+      
+      // First check if the event exists in our context (which includes both Supabase and mock events)
+      const contextEvent = events.find(e => e.id === id);
+      
+      if (contextEvent) {
+        console.log('Found event in context:', contextEvent);
+        setEvent(contextEvent);
+        setIsLoading(false);
+        return;
+      }
+      
+      // If not in context, try to fetch directly from Supabase
+      try {
+        console.log('Fetching event from Supabase, id:', id);
+        const { data, error } = await supabase
+          .from('events')
+          .select('*')
+          .eq('id', id)
+          .single();
+          
+        if (error) {
+          console.error('Supabase error:', error);
+          // As fallback, try to find in mock events
+          const mockEvent = mockEvents.find(e => e.id === id);
+          if (mockEvent) {
+            console.log('Found event in mock data:', mockEvent);
+            setEvent(mockEvent);
+          } else {
+            toast({
+              title: "Error",
+              description: "Event not found",
+              variant: "destructive",
+            });
+          }
+        } else if (data) {
+          console.log('Found event in Supabase:', data);
+          // Map Supabase data to EventProps format
+          setEvent({
+            id: data.id,
+            title: data.title,
+            date: data.date,
+            time: data.time,
+            location: data.location,
+            category: data.category,
+            imageUrl: data.imageurl,
+            organizer: data.organizer
+          });
+        }
+      } catch (err) {
+        console.error('Unexpected error:', err);
+        toast({
+          title: "Error",
+          description: "Failed to load event details",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchEvent();
+  }, [id, events]); // Re-fetch when ID changes
+  
+  // Find similar events (same category)
+  const similarEvents = events
+    .filter(e => event && e.category === event.category && e.id !== id)
+    .slice(0, 3);
 
   if (isLoading) {
     return (
@@ -50,6 +121,20 @@ const EventDetail = () => {
               <div className="h-64 bg-muted rounded-lg"></div>
             </div>
           </div>
+        </div>
+      </Layout>
+    );
+  }
+  
+  if (!event) {
+    return (
+      <Layout>
+        <div className="container py-8 text-center">
+          <h1 className="font-heading font-bold text-2xl mb-4">Event Not Found</h1>
+          <p className="mb-6">The event you're looking for doesn't exist or has been removed.</p>
+          <Button asChild>
+            <Link to="/browse">Browse Events</Link>
+          </Button>
         </div>
       </Layout>
     );
@@ -232,8 +317,8 @@ const EventDetail = () => {
           <div className="mt-12">
             <h2 className="font-heading font-semibold text-2xl mb-6">Similar Events</h2>
             <div className="swiss-grid">
-              {similarEvents.map((event) => (
-                <EventCard key={event.id} {...event} />
+              {similarEvents.map((e) => (
+                <EventCard key={e.id} {...e} />
               ))}
             </div>
           </div>
